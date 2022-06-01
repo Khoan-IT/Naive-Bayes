@@ -514,7 +514,6 @@ class MultinomialNaiveBayes():
         ''' Adds a column of ones to estimate the intercept term for separation boundary'''
         nr_x, nr_f = x.shape
 
-        print("abc", x.shape)
         intercept = np.ones([nr_x, 1])
         x = np.hstack((intercept, x))
         return x
@@ -527,6 +526,6 @@ class MultinomialNaiveBayes():
             if(truth[i] == predicted[i]):
                 correct += 1
             total += 1
-        return 1.0*correct/total
+        return 1.0 * correct/total
     
 
