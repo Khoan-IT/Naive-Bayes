@@ -403,5 +403,130 @@ class GaussianNaiveBayes():
             predictions.append(prediction)
         return pd.Series(predictions)
 
+import numpy as np
 
+
+class MultinomialNaiveBayes():
+
+    def __init__(self):
+        self.trained = False
+        self.likelihood = 0
+        self.prior = 0
+        self.smooth = True
+        self.smooth_param = 1
+        
+    def product(self, x, w):
+        '''
+        Computes the dot product between X,w
+        '''
+        return np.dot(x, w)
+
+
+    def train(self, data, label):
+
+        '''
+        n_docs = no. of documents
+        n_words = no. of unique words 
+        '''  
+        n_docs, n_words = data.shape
+        
+        '''classes = a list of possible classes'''
+        classes = np.unique(label)
+    
+        '''n_classes = no. of classes'''
+        n_classes = np.unique(label).shape[0]
+        
+        '''initialization of the prior and likelihood variables'''
+        prior = np.zeros(n_classes)
+        
+        likelihood = np.zeros((n_words,n_classes))
+        
+        '''
+        We need to compute the values of the prior and likelihood parameters
+        and place them in the variables called "prior" and "likelihood".
+        Examples:
+            prior[0] is the prior probability of a document being of class 0
+            likelihood[4, 0] is the likelihood of the fifth(*) feature being 
+            active, given that the document is of class 0
+            (*) recall that Python starts indices at 0, so an index of 4 
+            corresponds to the fifth feature!      
+        We need to incorporate self.smooth_param in likelihood calculation  
+        '''
+
+        no_doc_class = np.zeros(n_classes) #no of documents per class
+        word_doc_class = [np.zeros(n_words) for i in range(n_classes)]
+
+        for i in range(n_docs):
+            for index in range(n_classes):
+                if label[i][0] == classes[index]:
+                    no_doc_class[index] += 1
+                    for j in range(n_words): 
+                        word_doc_class[index][j] += data[i][j] #creates a arrray of all words in class 0
+                    
+   
+        #prior is
+        for index in range(n_classes):
+            prior[index] = 1.0 * no_doc_class[index]/ n_docs
+       
+        #likelihood
+        for i in range(n_words):
+            for index in range(n_classes):
+                likelihood[i][index]= (word_doc_class[index][i]+self.smooth_param)/(word_doc_class[index].sum()+self.smooth_param*n_words)
+      
+
+        ###########################
+
+        params = np.zeros((n_words+1, n_classes))
+
+        for i in range(n_classes): 
+            # log probabilities
+            params[0,i] = np.log(prior[i])
+
+            with np.errstate(divide='ignore'): # ignore warnings
+                params[1:,i] = np.nan_to_num(np.log(likelihood[:,i]))
+
+        self.likelihood = likelihood
+        self.prior = prior
+        self.trained = True
+        return params
+
+
+    def get_label(self, x, w):
+        '''
+        Computes the label for each data point
+        '''
+        scores = np.dot(x, w)
+        return np.argmax(scores,axis=1).transpose()
+
+
+    def predict(self, input, w):
+        '''
+        Classifies the points based on a weight vector.
+        '''
+        if self.trained == False:
+            raise ValueError("Model not trained. Can't predict")
+            return 0
+        input = self.add_intercept_term(input)
+        return self.get_label(input, w)
+
+
+    def add_intercept_term(self, x):
+        ''' Adds a column of ones to estimate the intercept term for separation boundary'''
+        nr_x, nr_f = x.shape
+
+        print("abc", x.shape)
+        intercept = np.ones([nr_x, 1])
+        x = np.hstack((intercept, x))
+        return x
+
+
+    def evaluate(self, truth, predicted):
+        correct = 0.0
+        total = 0.0
+        for i in range(len(truth)):
+            if(truth[i] == predicted[i]):
+                correct += 1
+            total += 1
+        return 1.0*correct/total
+    
 
