@@ -6,6 +6,10 @@ from typing import List, Union
 import pandas as pd
 import numpy as np
 
+import nltk
+from nltk import sent_tokenize,word_tokenize, WordNetLemmatizer
+from nltk.corpus import stopwords
+
 
 class BernoulliNaiveBayes():
     """Naive Bayes classifier class.
@@ -403,11 +407,9 @@ class GaussianNaiveBayes():
             predictions.append(prediction)
         return pd.Series(predictions)
 
-import numpy as np
-
 
 class MultinomialNaiveBayes():
-
+    
     def __init__(self):
         self.trained = False
         self.likelihood = 0
@@ -421,8 +423,7 @@ class MultinomialNaiveBayes():
         '''
         return np.dot(x, w)
 
-
-    def train(self, data, label):
+    def fit(self, data, label):
 
         '''
         n_docs = no. of documents
@@ -440,21 +441,11 @@ class MultinomialNaiveBayes():
         prior = np.zeros(n_classes)
         
         likelihood = np.zeros((n_words,n_classes))
-        
-        '''
-        We need to compute the values of the prior and likelihood parameters
-        and place them in the variables called "prior" and "likelihood".
-        Examples:
-            prior[0] is the prior probability of a document being of class 0
-            likelihood[4, 0] is the likelihood of the fifth(*) feature being 
-            active, given that the document is of class 0
-            (*) recall that Python starts indices at 0, so an index of 4 
-            corresponds to the fifth feature!      
-        We need to incorporate self.smooth_param in likelihood calculation  
-        '''
+
 
         no_doc_class = np.zeros(n_classes) #no of documents per class
         word_doc_class = [np.zeros(n_words) for i in range(n_classes)]
+
 
         for i in range(n_docs):
             for index in range(n_classes):
@@ -489,8 +480,7 @@ class MultinomialNaiveBayes():
         self.prior = prior
         self.trained = True
         return params
-
-
+    
     def get_label(self, x, w):
         '''
         Computes the label for each data point
@@ -498,17 +488,15 @@ class MultinomialNaiveBayes():
         scores = np.dot(x, w)
         return np.argmax(scores,axis=1).transpose()
 
-
     def predict(self, input, w):
         '''
         Classifies the points based on a weight vector.
         '''
-        if self.trained == False:
-            raise ValueError("Model not trained. Can't predict")
-            return 0
+        # if self.trained == False:
+        #     raise ValueError("Model not trained. Can't test")
+        #     return 0
         input = self.add_intercept_term(input)
         return self.get_label(input, w)
-
 
     def add_intercept_term(self, x):
         ''' Adds a column of ones to estimate the intercept term for separation boundary'''
@@ -518,7 +506,6 @@ class MultinomialNaiveBayes():
         x = np.hstack((intercept, x))
         return x
 
-
     def evaluate(self, truth, predicted):
         correct = 0.0
         total = 0.0
@@ -526,6 +513,6 @@ class MultinomialNaiveBayes():
             if(truth[i] == predicted[i]):
                 correct += 1
             total += 1
-        return 1.0 * correct/total
-    
+        return 1.0*correct/total
+
 
