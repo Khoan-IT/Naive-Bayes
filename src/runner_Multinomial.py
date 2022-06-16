@@ -5,7 +5,7 @@ from sklearn.naive_bayes import MultinomialNB
 import time
 
 if __name__ == '__main__':
-    dataset = SentimentCorpus(2)
+    dataset = SentimentCorpus(20)
 
     #------------
     nb = MultinomialNaiveBayes()
